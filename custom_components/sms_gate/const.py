@@ -1,5 +1,7 @@
 """Stałe konfiguracji integracji SMS Gate."""
 
+from datetime import timedelta
+
 DOMAIN = "sms_gate"
 
 # Konfiguracja połączenia (Local)
@@ -21,8 +23,8 @@ PATH_MESSAGE_LEGACY = "/message"
 PATH_HEALTH = "/health"
 PATH_HEALTH_READY = "/health/ready"
 
-# Interwał odświeżania coordinatora (sekundy)
-UPDATE_INTERVAL = 60
+# Interwał odświeżania coordinatora
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 # Limit wiadomości pobieranych w jednym żądaniu
 MESSAGES_LIMIT_DEFAULT = 20
