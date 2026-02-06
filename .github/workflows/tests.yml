@@ -1,5 +1,5 @@
 # Testy integracji SMS Gate (pytest)
-# Uruchamiane przy push/PR; bez ładowania pluginu HA (wymagałby pełnego HA).
+# test_api.py nie wymaga Home Assistant; test_notify/test_sensor ładują moduły HA – wymagają pełnego HA w env.
 name: Tests
 
 on:
@@ -28,14 +28,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-test.txt
 
-      - name: Run tests (without HA plugin)
+      - name: Run API tests
         run: |
-          python -m pytest tests/test_api.py tests/test_notify.py tests/test_sensor.py -v --tb=short
+          python -m pytest tests/test_api.py -v --tb=short
         env:
           PYTHONPATH: .
-
-      # Opcjonalnie: pełna pula z HA (odkomentuj jeśli dodasz homeassistant do requirements-test)
-      # - name: Install Home Assistant (optional)
-      #   run: pip install homeassistant
-      # - name: Run all tests with HA
-      #   run: python -m pytest tests/ -v --tb=short

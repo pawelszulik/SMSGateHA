@@ -4,6 +4,7 @@
   "codeowners": ["@pawelszulik"],
   "config_flow": true,
   "documentation": "https://github.com/pawelszulik/SMSGateHA",
+  "issue_tracker": "https://github.com/pawelszulik/SMSGateHA/issues",
   "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["aiohttp>=3.9.0"],

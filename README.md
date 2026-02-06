@@ -19,11 +19,17 @@ Integracja **SMS Gate** ( [SMS Gateway for Android](https://docs.sms-gate.app/) 
 5. Zainstaluj integrację **SMS Gate**.
 6. Zrestartuj Home Assistant.
 
+Uwaga: HACS jako „wersję” potrafi pokazać hash commita (np. `13db7b8`). Jeśli zobaczysz błąd typu:  
+`The version 13db7b8 for this integration can not be used with HACS.`  
+zainstaluj integrację **ręcznie** (poniżej) albo wybierz wersję z **GitHub Releases** (gdy jest dostępna).
+
 ### Ręczna instalacja
 
 1. Sklonuj lub pobierz to repozytorium.
-2. Skopiuj folder `custom_components/sms_gate` do katalogu `custom_components` w konfiguracji Home Assistant.
+2. Skopiuj folder `custom_components/sms_gate` do katalogu `custom_components` w konfiguracji Home Assistant (docelowo: `/config/custom_components/sms_gate`).
 3. Zrestartuj Home Assistant.
+
+Po każdej aktualizacji plików w `custom_components/sms_gate` zrestartuj Home Assistant, aby zmiany zostały zastosowane.
 
 ## Konfiguracja
 
