@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SMS Gate (Local)",
+        "description": "Podaj adres i dane logowania z aplikacji SMS Gateway na telefonie.",
+        "data": {
+          "host": "Adres IP",
+          "port": "Port",
+          "username": "Nazwa użytkownika",
+          "password": "Hasło"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie można połączyć z bramką. Sprawdź adres IP, port i sieć.",
+      "invalid_auth": "Nieprawidłowa nazwa użytkownika lub hasło.",
+      "unknown": "Wystąpił nieoczekiwany błąd."
+    },
+    "abort": {
+      "already_configured": "Ta bramka jest już skonfigurowana."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Odbiorcy i szablony",
+        "description": "Odbiorcy: jedna linia na wpis w formacie 'nazwa: numer' (np. alarm: +48123456789). Szablony: 'nazwa: treść' z placeholderami np. {{ message }}.",
+        "data": {
+          "recipients_text": "Odbiorcy (nazwa: numer)",
+          "templates_text": "Szablony (nazwa: treść)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "recent_messages": {
+        "name": "Ostatnie wiadomości"
+      },
+      "pending_count": {
+        "name": "Liczba oczekujących"
+      }
+    }
+  }
+}

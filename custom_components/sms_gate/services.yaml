@@ -1,0 +1,40 @@
+# Definicja serwisu send_sms (używana do dokumentacji w UI)
+send_sms:
+  name: Wyślij SMS
+  description: Wysyła SMS przez skonfigurowaną bramkę SMS Gate.
+  fields:
+    message:
+      name: Wiadomość
+      description: Treść wiadomości SMS.
+      required: true
+      selector:
+        text:
+    recipients:
+      name: Odbiorcy
+      description: Lista numerów lub nazw odbiorców z konfiguracji (np. alarm, dom).
+      required: true
+      selector:
+        object:
+    template:
+      name: Szablon
+      description: Opcjonalna nazwa szablonu z opcji integracji.
+      selector:
+        text:
+    data:
+      name: Dane
+      description: Opcjonalne zmienne do szablonu (słownik).
+      selector:
+        object:
+    entity_id:
+      name: Encja
+      description: Opcjonalnie – encja notify SMS Gate (np. notify.sms_gate), gdy masz kilka bramek.
+      selector:
+        entity:
+          integration: sms_gate
+          domain: notify
+    device_id:
+      name: Urządzenie
+      description: Opcjonalnie – ID urządzenia bramki, gdy masz kilka konfiguracji.
+      selector:
+        device:
+          integration: sms_gate
