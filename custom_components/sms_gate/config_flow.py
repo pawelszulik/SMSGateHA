@@ -145,12 +145,8 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("recipients_text", default=recipients_default): vol.Any(
-                        str, None
-                    ),
-                    vol.Optional("templates_text", default=templates_default): vol.Any(
-                        str, None
-                    ),
+                    vol.Optional("recipients_text", default=recipients_default): str,
+                    vol.Optional("templates_text", default=templates_default): str,
                 }
             ),
         )

@@ -45,11 +45,12 @@ Dane logowania znajdziesz w aplikacji SMS Gateway: **Home** → sekcja **Local S
 
 ## Opcje integracji (numery i szablony)
 
-W konfiguracji integracji wybierz **Opcje** (lub kliknij wpis SMS Gate → Opcje).
+**Gdzie wpisać numer telefonu:** **Ustawienia** → **Urządzenia i usługi** → integracja **SMS Gate** → **Opcje**. W polu **Odbiorcy** wpisujesz numery (patrz poniżej).
 
 - **Odbiorcy** – jedna linia na wpis w formacie `nazwa: numer`, np.  
   `alarm: +48123456789`  
-  `dom: +48987654321`
+  `dom: +48987654321`  
+  Numer podaj z prefiksem kraju (np. `+48` dla Polski).
 - **Szablony** – jedna linia na wpis w formacie `nazwa: treść`, z placeholderami Jinja2, np.  
   `alarm: Alarm: {{ message }} – {{ entity_id }}`  
   `awaria: Awaria: {{ friendly_name }}`
@@ -104,6 +105,43 @@ data:
   recipients:
     - alarm
 ```
+
+## Test SMS
+
+Integracja nie ma wbudowanego przycisku „Wyślij testowy SMS”. Test wykonujesz przez **Narzędzia deweloperskie** → **Usługi** w Home Assistant.
+
+**Gdzie wpisać numer do testu:** **Ustawienia** → **Urządzenia i usługi** → **SMS Gate** → **Opcje** → w polu **Odbiorcy** dodaj linię, np. `test: +48123456789` (nazwa dowolna, numer z prefiksem kraju). Zapisz. W usłudze testowej w polu `recipients` podaj tę nazwę (np. `test`) albo od razu numer `+48123456789`.
+
+### Sposób 1: Usługa sms_gate.send_sms (najprostszy)
+
+1. **Usługa:** SMS Gate: Wyślij SMS (`sms_gate.send_sms`).
+2. **Dane usługi (YAML):**
+
+```yaml
+message: "Test SMS z Home Assistant"
+recipients:
+  - test
+```
+
+Zamiast `test` użyj nazwy odbiorcy z Opcji albo numeru, np. `+48123456789`. Kliknij **Wywołaj usługę**.
+
+### Sposób 2: Usługa notify
+
+1. **Usługa:** Powiadomienia: Wyślij wiadomość (`notify.send_message`).
+2. **Dane usługi:**
+
+```yaml
+message: "Test SMS z Home Assistant"
+target:
+  - entity_id: notify.sms_gate
+data:
+  recipients:
+    - test
+```
+
+Jeśli encja notify ma inną nazwę (np. `notify.sms_gate_pixel`), wpisz ją w `entity_id`. Kliknij **Wywołaj usługę**.
+
+**Weryfikacja:** Encja **Ostatnie wiadomości** – w atrybucie **messages** pojawi się wysłana wiadomość (status: Sent, Delivered lub Failed).
 
 ## Encje (sensory)
 
