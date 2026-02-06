@@ -16,9 +16,9 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult, OptionsFlowWithReload
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .api import SMSGateAPI
 from .const import DEFAULT_PORT, DOMAIN
@@ -76,9 +76,9 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> SMSGateOptionsFlow:
-        return SMSGateOptionsFlow(config_entry)
+        return SMSGateOptionsFlow()
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Krok: formularz połączenia."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -100,11 +100,8 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class SMSGateOptionsFlow(config_entries.OptionsFlow):
+class SMSGateOptionsFlow(OptionsFlowWithReload):
     """Options flow: nazwani odbiorcy i szablony (jedna strona z dwoma polami)."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
 
     @callback
     def _current(self) -> tuple[dict[str, str], dict[str, str]]:
@@ -113,7 +110,7 @@ class SMSGateOptionsFlow(config_entries.OptionsFlow):
         templates = options.get(CONF_TEMPLATES) or {}
         return recipients, templates
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Edycja odbiorców i szablonów. Format: linie 'nazwa: wartość'."""
         recipients, templates = self._current()
         if user_input is not None:

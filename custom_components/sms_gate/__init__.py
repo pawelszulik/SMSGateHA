@@ -28,6 +28,8 @@ from .coordinator import SMSGateDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["notify", "sensor"]
+
 CONF_RECIPIENTS = "recipients"
 CONF_TEMPLATES = "templates"
 
@@ -75,12 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "session": session,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "notify")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def async_send_sms_handler(call: ServiceCall) -> None:
         await _async_send_sms(hass, call)
@@ -153,10 +150,7 @@ async def _async_send_sms(hass: HomeAssistant, call: ServiceCall) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Odładowanie integracji."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "notify")
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        entry, "sensor"
-    ) and unload_ok
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     data = hass.data[DOMAIN].pop(entry.entry_id, None)
     if data:
