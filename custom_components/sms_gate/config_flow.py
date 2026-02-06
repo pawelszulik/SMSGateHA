@@ -37,6 +37,13 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional("recipients_text"): str,
+        vol.Optional("templates_text"): str,
+    }
+)
+
 
 def _base_url(host: str, port: int) -> str:
     return f"http://{host}:{port}"
@@ -141,13 +148,14 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
             )
         recipients_default = "\n".join(f"{k}: {v}" for k, v in recipients.items())
         templates_default = "\n".join(f"{k}: {v}" for k, v in templates.items())
+        suggested_values = {
+            "recipients_text": recipients_default,
+            "templates_text": templates_default,
+        }
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("recipients_text", default=recipients_default): str,
-                    vol.Optional("templates_text", default=templates_default): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, suggested_values
             ),
         )
 
