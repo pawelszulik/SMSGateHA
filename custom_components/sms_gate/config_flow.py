@@ -21,12 +21,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant, callback
 
 from .api import SMSGateAPI
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_RECIPIENTS, CONF_TEMPLATES, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_RECIPIENTS = "recipients"
-CONF_TEMPLATES = "templates"
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -115,15 +112,21 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
         self._entry = config_entry
 
     def _current(self) -> tuple[dict[str, str], dict[str, str]]:
-        # Opcje z rejestru po entry_id (aktualny stan po zapisie przy ponownym otwarciu)
+        # Opcje z rejestru – ten sam klucz co przy zapisie: "recipients", "templates"
         entries = self.hass.config_entries.async_entries(DOMAIN)
         entry = next(
             (e for e in entries if e.entry_id == self._entry.entry_id),
             self._entry,
         )
-        options = dict(entry.options) if entry.options else {}
-        recipients = options.get(CONF_RECIPIENTS) or {}
-        templates = options.get(CONF_TEMPLATES) or {}
+        raw_options = entry.options or {}
+        options = dict(raw_options)
+        # Zawsze słowniki (np. po JSON ze storage)
+        recipients = options.get(CONF_RECIPIENTS)
+        templates = options.get(CONF_TEMPLATES)
+        if not isinstance(recipients, dict):
+            recipients = {}
+        if not isinstance(templates, dict):
+            templates = {}
         return recipients, templates
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -153,24 +156,28 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
             # Nie nadpisuj istniejących opcji pustymi słownikami
             final_recipients = new_recipients if new_recipients else recipients
             final_templates = new_templates if new_templates else templates
-            return self.async_create_entry(
-                title="",
-                data={
-                    CONF_RECIPIENTS: final_recipients,
-                    CONF_TEMPLATES: final_templates,
-                },
-            )
+            new_options = {
+                CONF_RECIPIENTS: final_recipients,
+                CONF_TEMPLATES: final_templates,
+            }
+            # Wymuszenie zapisu – framework czasem nie aplikuje data z flow do options
+            await self.hass.config_entries.async_update_entry(self._entry, options=new_options)
+            return self.async_create_entry(title="", data=new_options)
         recipients_default = "\n".join(f"{k}: {v}" for k, v in recipients.items())
         templates_default = "\n".join(f"{k}: {v}" for k, v in templates.items())
-        suggested_values = {
+        _LOGGER.debug(
+            "Opcje init entry_id=%s: recipients=%s templates=%s",
+            self._entry.entry_id,
+            list(recipients.keys()),
+            list(templates.keys()),
+        )
+        suggested = {
             "recipients_text": recipients_default,
             "templates_text": templates_default,
         }
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, suggested_values
-            ),
+            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, suggested),
         )
 
 

@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "title": "Recipients and templates",
-        "description": "Recipients: one line per entry, format 'name: number' (e.g. alarm: +48123456789). Templates: 'name: content' with placeholders e.g. {{{{ message }}}}.",
+        "description": "Recipients: one line per entry, format 'name: number' (e.g. alarm: +48123456789). Templates: 'name: content' with Jinja2 placeholders e.g. message.",
         "data": {
           "recipients_text": "Recipients (name: number)",
           "templates_text": "Templates (name: content)"

@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "title": "Odbiorcy i szablony",
-        "description": "Odbiorcy: jedna linia na wpis w formacie 'nazwa: numer' (np. alarm: +48123456789). Szablony: 'nazwa: treść' z placeholderami np. {{{{ message }}}}.",
+        "description": "Odbiorcy: jedna linia na wpis w formacie 'nazwa: numer' (np. alarm: +48123456789). Szablony: 'nazwa: treść' z placeholderami Jinja2, np. message.",
         "data": {
           "recipients_text": "Odbiorcy (nazwa: numer)",
           "templates_text": "Szablony (nazwa: treść)"
