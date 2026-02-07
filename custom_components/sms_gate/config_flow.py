@@ -120,6 +120,11 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
         )
         raw_options = entry.options or {}
         options = dict(raw_options)
+        _LOGGER.debug(
+            "Opcje odczyt entry_id=%s: options_keys=%s",
+            entry.entry_id,
+            list(options.keys()),
+        )
         # Zawsze słowniki (np. po JSON ze storage)
         recipients = options.get(CONF_RECIPIENTS)
         templates = options.get(CONF_TEMPLATES)
@@ -160,8 +165,19 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
                 CONF_RECIPIENTS: final_recipients,
                 CONF_TEMPLATES: final_templates,
             }
-            # Wymuszenie zapisu – w tej wersji HA async_update_entry jest synchroniczne (zwraca bool)
-            self.hass.config_entries.async_update_entry(self._entry, options=new_options)
+            # Aktualizuj wpis z rejestru (ten sam obiekt, z którego potem czytamy)
+            entries = self.hass.config_entries.async_entries(DOMAIN)
+            entry_to_update = next(
+                (e for e in entries if e.entry_id == self._entry.entry_id),
+                self._entry,
+            )
+            self.hass.config_entries.async_update_entry(entry_to_update, options=new_options)
+            _LOGGER.debug(
+                "Opcje zapisane entry_id=%s: recipients=%s templates=%s",
+                self._entry.entry_id,
+                list(final_recipients.keys()),
+                list(final_templates.keys()),
+            )
             return self.async_create_entry(title="", data=new_options)
         recipients_default = "\n".join(f"{k}: {v}" for k, v in recipients.items())
         templates_default = "\n".join(f"{k}: {v}" for k, v in templates.items())
