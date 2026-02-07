@@ -160,8 +160,8 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
                 CONF_RECIPIENTS: final_recipients,
                 CONF_TEMPLATES: final_templates,
             }
-            # Wymuszenie zapisu – framework czasem nie aplikuje data z flow do options
-            await self.hass.config_entries.async_update_entry(self._entry, options=new_options)
+            # Wymuszenie zapisu – w tej wersji HA async_update_entry jest synchroniczne (zwraca bool)
+            self.hass.config_entries.async_update_entry(self._entry, options=new_options)
             return self.async_create_entry(title="", data=new_options)
         recipients_default = "\n".join(f"{k}: {v}" for k, v in recipients.items())
         templates_default = "\n".join(f"{k}: {v}" for k, v in templates.items())
