@@ -83,7 +83,7 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> SMSGateOptionsFlow:
-        return SMSGateOptionsFlow(config_entry)
+        return SMSGateOptionsFlow()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Krok: formularz połączenia."""
@@ -110,13 +110,14 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class SMSGateOptionsFlow(OptionsFlowWithReload):
     """Options flow: nazwani odbiorcy i szablony (jedna strona z dwoma polami)."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._entry = config_entry
 
     @callback
     def _current(self) -> tuple[dict[str, str], dict[str, str]]:
-        options = self._entry.options or {}
+        options = (
+            (self.config_entry.options or {}) if self.config_entry else {}
+        )
         recipients = options.get(CONF_RECIPIENTS) or {}
         templates = options.get(CONF_TEMPLATES) or {}
         return recipients, templates
@@ -130,8 +131,9 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
                 line = line.strip()
                 if not line or ":" not in line:
                     continue
-                name, _, num = line.partition(":")
-                name, num = name.strip(), num.strip()
+                parts = line.split(":", 1)
+                name = parts[0].strip()
+                num = parts[1].strip() if len(parts) > 1 else ""
                 if name:
                     new_recipients[name] = num
             new_templates = {}
@@ -139,15 +141,19 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
                 line = line.strip()
                 if not line or ":" not in line:
                     continue
-                name, _, content = line.partition(":")
-                name, content = name.strip(), content.strip()
+                parts = line.split(":", 1)
+                name = parts[0].strip()
+                content = parts[1].strip() if len(parts) > 1 else ""
                 if name:
                     new_templates[name] = content
+            # Nie nadpisuj istniejących opcji pustymi słownikami
+            final_recipients = new_recipients if new_recipients else recipients
+            final_templates = new_templates if new_templates else templates
             return self.async_create_entry(
                 title="",
                 data={
-                    CONF_RECIPIENTS: new_recipients,
-                    CONF_TEMPLATES: new_templates,
+                    CONF_RECIPIENTS: final_recipients,
+                    CONF_TEMPLATES: final_templates,
                 },
             )
         recipients_default = "\n".join(f"{k}: {v}" for k, v in recipients.items())
