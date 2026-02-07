@@ -83,7 +83,7 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> SMSGateOptionsFlow:
-        return SMSGateOptionsFlow()
+        return SMSGateOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Krok: formularz połączenia."""
@@ -110,14 +110,18 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class SMSGateOptionsFlow(OptionsFlowWithReload):
     """Options flow: nazwani odbiorcy i szablony (jedna strona z dwoma polami)."""
 
-    def __init__(self) -> None:
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         super().__init__()
+        self._entry = config_entry
 
-    @callback
     def _current(self) -> tuple[dict[str, str], dict[str, str]]:
-        options = (
-            (self.config_entry.options or {}) if self.config_entry else {}
+        # Opcje z rejestru po entry_id (aktualny stan po zapisie przy ponownym otwarciu)
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entry = next(
+            (e for e in entries if e.entry_id == self._entry.entry_id),
+            self._entry,
         )
+        options = dict(entry.options) if entry.options else {}
         recipients = options.get(CONF_RECIPIENTS) or {}
         templates = options.get(CONF_TEMPLATES) or {}
         return recipients, templates
