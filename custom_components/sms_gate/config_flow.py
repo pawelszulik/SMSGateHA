@@ -80,6 +80,10 @@ class SMSGateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> SMSGateOptionsFlow:
+        _LOGGER.info(
+            "Opcje flow: otwarcie dla entry_id=%s",
+            config_entry.entry_id,
+        )
         return SMSGateOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -110,6 +114,7 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         super().__init__()
         self._entry = config_entry
+        _LOGGER.debug("Opcje flow init: entry_id=%s", config_entry.entry_id)
 
     def _current(self) -> tuple[dict[str, str], dict[str, str]]:
         # Opcje z rejestru – ten sam klucz co przy zapisie: "recipients", "templates"
@@ -120,10 +125,16 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
         )
         raw_options = entry.options or {}
         options = dict(raw_options)
+        # Opis options bez treści (klucze + długości wartości)
+        options_desc = {
+            k: len(v) if isinstance(v, (dict, list, str)) else type(v).__name__
+            for k, v in options.items()
+        }
         _LOGGER.debug(
-            "Opcje odczyt entry_id=%s: options_keys=%s",
+            "Opcje odczyt entry_id=%s: options_keys=%s raw_options_desc=%s",
             entry.entry_id,
             list(options.keys()),
+            options_desc,
         )
         # Zawsze słowniki (np. po JSON ze storage)
         recipients = options.get(CONF_RECIPIENTS)
@@ -132,14 +143,33 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
             recipients = {}
         if not isinstance(templates, dict):
             templates = {}
+        _LOGGER.debug(
+            "Opcje odczyt: recipients=%s templates=%s",
+            list(recipients.keys()),
+            list(templates.keys()),
+        )
         return recipients, templates
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Edycja odbiorców i szablonów. Format: linie 'nazwa: wartość'."""
         recipients, templates = self._current()
         if user_input is not None:
+            _LOGGER.info(
+                "Opcje: zapis entry_id=%s",
+                self._entry.entry_id,
+            )
+            r_text = user_input.get("recipients_text") or ""
+            t_text = user_input.get("templates_text") or ""
+            _LOGGER.debug(
+                "Opcje: user_input keys=%s recipients_text len=%s templates_text len=%s preview_r=%s preview_t=%s",
+                list(user_input.keys()),
+                len(r_text),
+                len(t_text),
+                (r_text[:80] + "…") if len(r_text) > 80 else r_text or "(puste)",
+                (t_text[:80] + "…") if len(t_text) > 80 else t_text or "(puste)",
+            )
             new_recipients = {}
-            for line in (user_input.get("recipients_text") or "").strip().splitlines():
+            for line in (r_text).strip().splitlines():
                 line = line.strip()
                 if not line or ":" not in line:
                     continue
@@ -149,7 +179,7 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
                 if name:
                     new_recipients[name] = num
             new_templates = {}
-            for line in (user_input.get("templates_text") or "").strip().splitlines():
+            for line in (t_text).strip().splitlines():
                 line = line.strip()
                 if not line or ":" not in line:
                     continue
@@ -161,6 +191,16 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
             # Nie nadpisuj istniejących opcji pustymi słownikami
             final_recipients = new_recipients if new_recipients else recipients
             final_templates = new_templates if new_templates else templates
+            _LOGGER.debug(
+                "Opcje: parsed new_recipients=%s new_templates=%s",
+                list(new_recipients.keys()),
+                list(new_templates.keys()),
+            )
+            _LOGGER.debug(
+                "Opcje: final_recipients=%s final_templates=%s",
+                list(final_recipients.keys()),
+                list(final_templates.keys()),
+            )
             new_options = {
                 CONF_RECIPIENTS: final_recipients,
                 CONF_TEMPLATES: final_templates,
@@ -171,21 +211,28 @@ class SMSGateOptionsFlow(OptionsFlowWithReload):
                 (e for e in entries if e.entry_id == self._entry.entry_id),
                 self._entry,
             )
-            self.hass.config_entries.async_update_entry(entry_to_update, options=new_options)
             _LOGGER.debug(
-                "Opcje zapisane entry_id=%s: recipients=%s templates=%s",
-                self._entry.entry_id,
-                list(final_recipients.keys()),
-                list(final_templates.keys()),
+                "Opcje: entry_to_update entry_id=%s",
+                entry_to_update.entry_id,
+            )
+            result = self.hass.config_entries.async_update_entry(entry_to_update, options=new_options)
+            _LOGGER.debug(
+                "Opcje: async_update_entry wywołane result=%s",
+                result,
             )
             return self.async_create_entry(title="", data=new_options)
         recipients_default = "\n".join(f"{k}: {v}" for k, v in recipients.items())
         templates_default = "\n".join(f"{k}: {v}" for k, v in templates.items())
-        _LOGGER.debug(
-            "Opcje init entry_id=%s: recipients=%s templates=%s",
+        _LOGGER.info(
+            "Opcje: pokazanie formularza entry_id=%s",
             self._entry.entry_id,
-            list(recipients.keys()),
-            list(templates.keys()),
+        )
+        _LOGGER.debug(
+            "Opcje: suggested recipients_text len=%s templates_text len=%s preview_r=%s preview_t=%s",
+            len(recipients_default),
+            len(templates_default),
+            (recipients_default[:80] + "…") if len(recipients_default) > 80 else recipients_default or "(puste)",
+            (templates_default[:80] + "…") if len(templates_default) > 80 else templates_default or "(puste)",
         )
         suggested = {
             "recipients_text": recipients_default,

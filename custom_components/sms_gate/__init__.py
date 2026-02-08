@@ -59,6 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Konfiguracja integracji z entry."""
+    _LOGGER.info("SMS Gate: setup entry entry_id=%s", entry.entry_id)
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     username = entry.data[CONF_USERNAME]
@@ -150,6 +151,7 @@ async def _async_send_sms(hass: HomeAssistant, call: ServiceCall) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Odładowanie integracji."""
+    _LOGGER.info("SMS Gate: unload entry entry_id=%s", entry.entry_id)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     data = hass.data[DOMAIN].pop(entry.entry_id, None)
